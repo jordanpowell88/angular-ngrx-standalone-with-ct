@@ -1,4 +1,4 @@
-import { Component, inject } from '@angular/core';
+import { Component, InjectionToken, inject } from '@angular/core';
 import { AsyncPipe, CommonModule } from '@angular/common';
 import { Store } from '@ngrx/store';
 import { countFeature } from '../store/count/count.reducer';
@@ -7,7 +7,7 @@ import * as CountActions from '../store/count/count.actions';
 @Component({
   selector: 'app-stepper',
   standalone: true,
-  imports: [CommonModule, AsyncPipe],
+  imports: [AsyncPipe],
   providers: [Store],
   templateUrl: './stepper.component.html',
   styleUrls: ['./stepper.component.css'],
