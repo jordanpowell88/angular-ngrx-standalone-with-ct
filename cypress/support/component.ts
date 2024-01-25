@@ -18,6 +18,7 @@ import {
   Action,
   FeatureSlice,
   State,
+  Store,
   provideState,
   provideStore,
 } from '@ngrx/store';
@@ -26,14 +27,8 @@ import './commands';
 // Alternatively you can use CommonJS syntax:
 // require('./commands')
 
-import { MountResponse, createOutputSpy, mount } from 'cypress/angular';
+import { MountResponse, mount } from 'cypress/angular';
 import { countFeature } from 'src/app/store/count/count.reducer';
-import {
-  ENVIRONMENT_INITIALIZER,
-  EnvironmentProviders,
-  Provider,
-  makeEnvironmentProviders,
-} from '@angular/core';
 
 // Augment the Cypress namespace to include type definitions for
 // your custom command.
@@ -43,23 +38,30 @@ declare global {
   namespace Cypress {
     interface Chainable {
       mount: typeof mount;
-      createStoreSpy: typeof createStoreSpy;
+      store(storePropertyName: string): Cypress.Chainable<Store>;
+      dispatch(): Cypress.Chainable;
     }
   }
 }
 
 type MountParams = Parameters<typeof mount>;
 
-function createStoreSpy<T>(componentResponse?: MountResponse<MountParams[0]>) {
-  // @ts-expect-error
-  const { store } = componentResponse.component as Store<T>;
+Cypress.Commands.add(
+  'store',
+  { prevSubject: true },
+  (subject: MountResponse<MountParams>, storePropertyName: string) => {
+    const { component } = subject;
 
-  cy.spy(store, 'dispatch').as('dispatchSpy');
+    // @ts-expect-error
+    const store = component[storePropertyName] as Store;
 
-  return cy.wrap(componentResponse);
-}
+    return cy.wrap(store);
+  }
+);
 
-Cypress.Commands.add('createStoreSpy', { prevSubject: true }, createStoreSpy);
+Cypress.Commands.add('dispatch', { prevSubject: true }, (store: Store) => {
+  return cy.wrap(cy.spy(store, 'dispatch').as('dispatch'));
+});
 
 Cypress.Commands.add(
   'mount',
@@ -74,6 +76,3 @@ Cypress.Commands.add(
     });
   }
 );
-
-// Example use:
-// cy.mount(MyComponent)

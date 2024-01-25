@@ -37,12 +37,29 @@ describe('StepperComponent', () => {
   });
 
   it('can spy on store.dispatch', () => {
+    cy.mount(StepperComponent).then(({ component }) => {
+      // @ts-expect-error
+      cy.spy(component.store, 'dispatch').as('dispatch');
+    });
+    cy.get('button').contains('+').click();
+    cy.get('@dispatch').should('have.been.calledWith', incrementCount());
+  });
+
+  it('can use cy.store()', () => {
     cy.mount(StepperComponent)
-      .createStoreSpy()
-      .then((response) => {
-        console.log(response);
+      .store('store')
+      .then((store) => {
+        cy.spy(store, 'dispatch').as('dispatch');
       });
     cy.get('button').contains('+').click();
-    cy.get('@dispatchSpy').should('have.been.calledWith', incrementCount());
+    cy.get('@dispatch').should('have.been.called');
+    cy.get('span').should('have.text', 1);
+  });
+
+  it('can use cy.dispatch()', () => {
+    cy.mount(StepperComponent).store('store').dispatch();
+    cy.get('button').contains('+').click();
+    cy.get('@dispatch').should('have.been.calledWith', incrementCount());
+    cy.get('span').should('have.text', 1);
   });
 });
